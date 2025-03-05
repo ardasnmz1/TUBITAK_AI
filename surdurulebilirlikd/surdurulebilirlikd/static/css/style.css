@@ -1,0 +1,186 @@
+/* style.css */
+
+/* 1) Genel Sıfırlama (Reset) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 2) Sayfa Fontu ve Arkaplan */
+html, body {
+    font-family: "Open Sans", sans-serif;
+    background-color: #F4F6F7;
+    color: #333;
+    line-height: 1.5;
+    width: 100%;
+    height: 100%;
+}
+
+/* 3) Genel Konteyner Ayarı */
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem;
+}
+
+/* 4) Başlıklar */
+h1, h2, h3, h4, h5 {
+    color: #005F8F; /* İzmir BB mavi tonu */
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+/* 5) Metin ve Form Elemanları */
+p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+}
+input[type="text"],
+input[type="number"],
+textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+#busLineInput {
+    width: 30%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+/* 6) Buton Stili */
+button,
+.btn {
+    background-color: #007ACC;
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+    font-size: 1rem;
+}
+button:hover,
+.btn:hover {
+    background-color: #005F8F;
+}
+
+button:active,
+.btn:active {
+    background-color: #40b1fd;
+}
+
+/* 7) Tablolar */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background-color: #fff;
+}
+table thead {
+    background-color: #005F8F;
+    color: #fff;
+}
+table th,
+table td {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+.table-bordered {
+    border: 2px solid #ccc;
+}
+
+/* 8) Form Grupları */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* 9) Model Özeti (K2 Formatında) */
+.model-ozeti {
+    background-color: #fff;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 6px;
+    border-left: 5px solid #005F8F;
+}
+.model-ozeti h3 {
+    margin-bottom: 0.5rem;
+}
+#model-summary {
+    background-color: #eef3f6;
+    padding: 1rem;
+    border-radius: 4px;
+    white-space: pre-wrap; /* Satır taşma sorununu önler */
+    font-size: 0.95rem;
+}
+
+/* 10) Sefer Programı Bloğu */
+.sefer-programi {
+    background-color: #fff;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-bottom: 1.5rem;
+}
+.sefer-programi h3 {
+    margin-bottom: 0.75rem;
+}
+
+.progressDiv {
+    width: 100%;
+    height: 25px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 1rem;
+
+ }
+
+#safety_progress, #traffic_progress {
+    height: 100%;
+    width: 0%; /* Başlangıçta 0 */
+  background-color: #007ACC; /* Mavi ton */
+  transition: width 1s ease;
+  color: #fff;
+  text-align: center;
+  line-height: 25px;
+  font-weight: 600;
+
+}
+
+/* 11) Güven ve Trafik Bilgileri */
+#safety-percentage,
+#traffic-info {
+    margin: 1rem 0;
+    font-weight: 500;
+}
+
+/* 12) Responsive (Basit Örnek) */
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 1rem;
+    }
+    table th,
+    table td {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+    button,
+    .btn {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+}

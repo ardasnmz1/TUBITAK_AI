@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Otobüs Sefer Programı ve Trafik Yoğunluğu</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='.../backend/static/css/style.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='../static/css/style.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2">
+    <link rel="stylesheet" href="../static/css/style.css">
+
+
+</head>
+<body>
+    <div class="container">
+        <h1>Otobüs Saatleri Tahmini ve Model İstatistikleri</h1>
+        <div class="model-ozeti">
+            <h3>Model Özeti (K2 Formatında)</h3>
+            <pre id="model-summary">Veri çekiliyor...</pre>
+        </div>
+        
+        <!-- Sefer Programı Bölümü -->
+        <div class="sefer-programi">
+            <h3>Otobüs Sefer Programı</h3>
+            <form id="schedule-form">
+                <div class="form-group">
+                    <label for="busLineInput">Otobüs Hattını Giriniz:</label> <br>
+                    <input type="text" class="form-control" id="busLineInput" placeholder="Örn. 42" required>
+                </div>
+                <button type="submit">Seferlere Bak</button>
+            </form>
+            <div id="safety-percentage"></div>
+            <div class="progressDiv">
+                <div id="safety_progress"></div>
+            </div>
+            <div id="traffic-info"></div>
+            <div class="progressDiv">
+                <div id="traffic_progress"></div>
+            </div>
+            <div id="schedule-result"></div>
+            
+        </div>
+        
+
+        
+        
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Bootstrap ve diğer JS kütüphaneleri -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Özel charts.js dosyanızı (varsa) ekleyin -->
+    <script src="{{ url_for('static', filename='js/charts.js') }}?v=2"></script>
+    
+    <script>
+        // Model özetini API'den çekip, her satırın başına "K2:" ekleyerek gösteriyoruz.
+        fetch('/api/model_summary')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("HTTP error " + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    console.error("API Hatası:", data.error);
+                    document.getElementById('model-summary').innerText = "Hata: " + data.error;
+                } else {
+                    let summary = data.model_summary;
+                    let k2Formatted = summary.split("\n").map(line => "K2: " + line).join("\n");
+                    document.getElementById('model-summary').innerText = k2Formatted;
+                    console.log("Model özet verisi güncellendi.");
+                }
+            })
+            .catch(error => {
+                console.error("Fetch Hatası:", error);
+                document.getElementById('model-summary').innerText = "Veri çekilirken hata oluştu: " + error;
+            });
+        
+
+document.getElementById('schedule-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const busLine = document.getElementById('busLineInput').value.trim();
+    if (!busLine) {
+        alert("Lütfen bir otobüs hattı giriniz.");
+        return;
+    }
+    const payload = { HAT_NO: busLine };
+    fetch('/api/generate_schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("HTTP error " + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            document.getElementById('schedule-result').innerHTML = "<p>Hata: " + data.error + "</p>";
+            return;
+        }
+        const schedule = data.data;
+        if (!schedule || schedule.length === 0) {
+            document.getElementById('schedule-result').innerHTML = "<p>Sefer programı oluşturulamadı.</p>";
+            return;
+        }
+        // Tablonun HTML'ini oluşturuyoruz, yeni sütun "Trafik Yoğunluğu" ekleniyor.
+        let tableHtml = '<table class="table table-bordered"><thead><tr><th>Sefer Saati</th><th>Doğruluk</th><th>Karbon Azaltımı</th><th>Güven Yüzdesi</th><th>Aralık (Dakika)</th></tr></thead><tbody>';
+        let totalSafety = 0;
+        let trafficDensity = 0;
+
+        schedule.forEach(item => {
+            tableHtml += `<tr>
+                <td>${item.departure_time}</td>
+                <td>${item.accuracy}</td>
+                <td>${item.carbon_reduction}</td>
+                <td>${item.safety_percentage}</td>
+                <td>${item.interval_minutes}</td>
+            </tr>`;
+            totalSafety += parseFloat(item.safety_percentage);
+            trafficDensity += parseFloat(item.traffic_density);
+        });
+        tableHtml += '</tbody></table>';
+        document.getElementById('schedule-result').innerHTML = tableHtml;
+        
+                        
+        const divPrg = document.querySelectorAll('.progressDiv');
+        
+        divPrg.forEach(bar => {
+            bar.style.backgroundColor = '#e0e0e0';
+          });
+
+        // Ortalama güven yüzdesi hesaplama
+        const avgSafety = (totalSafety / schedule.length).toFixed(1);
+        document.getElementById('safety-percentage').innerHTML = `<p><strong>Ortalama Güven Yüzdesi:</strong> ${avgSafety}%</p>`;
+        const safetyProgress = document.getElementById('safety_progress');
+        safetyProgress.style.width = `${(avgSafety / 100) * 100}%`;
+
+        // Ortalama trafik yoğunluğu hesapla ve göster
+        const avgTrafficDensity = (trafficDensity / schedule.length).toFixed(1);
+        document.getElementById('traffic-info').innerHTML = `<p><strong>Ortalama Trafik Yoğunluğu:</strong> ${avgTrafficDensity}%</p>`;
+        const trafficProgress = document.getElementById('traffic_progress');
+        trafficProgress.style.width = `${(avgTrafficDensity / 100) * 100}%`;
+
+
+
+    })
+    .catch(error => {
+        console.error("Sefer programı hatası:", error);
+        document.getElementById('schedule-result').innerText = "Sefer programı oluşturulurken hata oluştu: " + error;
+    });
+});
+
+function fetchPredictionAccuracies() {
+    fetch('/api/prediction_accuracies')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error("API Hatası:", data.error);
+                document.getElementById('accuracy').innerHTML = `<p style="color: red;">Hata: ${data.error}</p>`;
+            } else {
+                document.getElementById('knn-accuracy').innerText = `%${data.knn_accuracy}`;
+                document.getElementById('rf-accuracy').innerText = `%${data.rf_accuracy}`;
+                document.getElementById('xgb-accuracy').innerText = `%${data.xgb_accuracy}`;
+            }
+        })
+        .catch(error => {
+            console.error("Veri çekilirken hata oluştu:", error);
+        });
+}   
+
+document.getElementById('schedule-form').addEventListener('submit', function (e) {
+    e.preventDefault(); // Sayfa yenilenmesin
+    const busLine = document.getElementById('busLineInput').value.trim();
+    if (!busLine) {
+        alert("Lütfen bir otobüs hattı giriniz.");
+        return;
+    }
+    const payload = { HAT_NO: busLine };
+
+    // Sefer programını oluşturmak için POST isteği
+    fetch('/api/generate_schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data || data.error) {
+            document.getElementById('schedule-result').innerHTML = `<p>Hata: ${data.error}</p>`;
+            return;
+        }
+        // Sefer başarıyla oluşturulunca doğruluk oranlarını güncelle
+        fetchPredictionAccuracies();
+    })
+    .catch(error => {
+        console.error("Sefer programı hatası:", error);
+        document.getElementById('schedule-result').innerHTML = `<p>Sefer programı oluşturulurken hata oluştu: ${error}</p>`;
+    });
+});
+    </script>
+</body>
+</html>
